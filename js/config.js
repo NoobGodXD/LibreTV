@@ -119,8 +119,6 @@ const API_SITES = {
         name: '空内容测试源',
         adult: true
     }
-};
-    }
     //ARCHIVE https://telegra.ph/APIs-08-12
 };
 
@@ -203,12 +201,12 @@ const SECURITY_CONFIG = {
 
 // 添加多个自定义API源的配置
 const CUSTOM_API_CONFIG = {
-    separator: ',',           // 分隔符
-    maxSources: 5,            // 最大允许的自定义源数量
-    testTimeout: 5000,        // 测试超时时间(毫秒)
-    namePrefix: 'Custom-',    // 自定义源名称前缀
-    validateUrl: true,        // 验证URL格式
-    cacheResults: true,       // 缓存测试结果
+    separator: ',',            // 分隔符
+    maxSources: 5,             // 最大允许的自定义源数量
+    testTimeout: 5000,         // 测试超时时间(毫秒)
+    namePrefix: 'Custom-',     // 自定义源名称前缀
+    validateUrl: true,         // 验证URL格式
+    cacheResults: true,        // 缓存测试结果
     cacheExpiry: 5184000000,  // 缓存过期时间(2个月)
     adultPropName: 'isAdult' // 用于标记成人内容的属性名
 };
