@@ -1,84 +1,84 @@
-// 全局变量
-let selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '["tyyszy","dyttzy", "bfzy", "ruyi"]'); // 默认选中资源
-let customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
+// 全域變數
+let selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '["tyyszy","dyttzy", "bfzy", "ruyi"]'); // 預設選取資源
+let customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 儲存自訂 API 列表
 
-// 添加当前播放的集数索引
+// 新增目前播放的集數索引
 let currentEpisodeIndex = 0;
-// 添加当前视频的所有集数
+// 新增目前影片的所有集數
 let currentEpisodes = [];
-// 添加当前视频的标题
+// 新增目前影片的標題
 let currentVideoTitle = '';
-// 全局变量用于倒序状态
+// 全域變數用於倒序狀態
 let episodesReversed = false;
 
-// 页面初始化
+// 頁面初始化
 document.addEventListener('DOMContentLoaded', function () {
-    // 初始化API复选框
+    // 初始化 API 核取方塊
     initAPICheckboxes();
 
-    // 初始化自定义API列表
+    // 初始化自訂 API 列表
     renderCustomAPIsList();
 
-    // 初始化显示选中的API数量
+    // 初始化顯示選取的 API 數量
     updateSelectedApiCount();
 
-    // 渲染搜索历史
+    // 產生搜尋歷史
     renderSearchHistory();
 
-    // 设置默认API选择（如果是第一次加载）
+    // 設定預設 API 選擇（如果是第一次載入）
     if (!localStorage.getItem('hasInitializedDefaults')) {
-        // 默认选中资源
+        // 預設選取資源
         selectedAPIs = ["tyyszy", "bfzy", "dyttzy", "ruyi"];
         localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
 
-        // 默认选中过滤开关
+        // 預設選取過濾開關
         localStorage.setItem('yellowFilterEnabled', 'true');
         localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');
 
-        // 默认启用豆瓣功能
+        // 預設啟用豆瓣功能
         localStorage.setItem('doubanEnabled', 'true');
 
-        // 标记已初始化默认值
+        // 標記已初始化預設值
         localStorage.setItem('hasInitializedDefaults', 'true');
     }
 
-    // 设置黄色内容过滤器开关初始状态
+    // 設定成人內容過濾器開關初始狀態
     const yellowFilterToggle = document.getElementById('yellowFilterToggle');
     if (yellowFilterToggle) {
         yellowFilterToggle.checked = localStorage.getItem('yellowFilterEnabled') === 'true';
     }
 
-    // 设置广告过滤开关初始状态
+    // 設定廣告過濾開關初始狀態
     const adFilterToggle = document.getElementById('adFilterToggle');
     if (adFilterToggle) {
-        adFilterToggle.checked = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false'; // 默认为true
+        adFilterToggle.checked = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false'; // 預設為 true
     }
 
-    // 设置事件监听器
+    // 設定事件監聽器
     setupEventListeners();
 
-    // 初始检查成人API选中状态
+    // 初始檢查成人 API 選取狀態
     setTimeout(checkAdultAPIsSelected, 100);
 });
 
-// 初始化API复选框
+// 初始化 API 核取方塊
 function initAPICheckboxes() {
     const container = document.getElementById('apiCheckboxes');
     container.innerHTML = '';
 
-    // 添加普通API组标题
+    // 新增一般 API 群組標題
     const normaldiv = document.createElement('div');
     normaldiv.id = 'normaldiv';
     normaldiv.className = 'grid grid-cols-2 gap-2';
     const normalTitle = document.createElement('div');
     normalTitle.className = 'api-group-title';
-    normalTitle.textContent = '普通资源';
+    normalTitle.textContent = '一般資源';
     normaldiv.appendChild(normalTitle);
 
-    // 创建普通API源的复选框
+    // 建立一般 API 來源的核取方塊
     Object.keys(API_SITES).forEach(apiKey => {
         const api = API_SITES[apiKey];
-        if (api.adult) return; // 跳过成人内容API，稍后添加
+        if (api.adult) return; // 跳過成人內容 API，稍後新增
 
         const checked = selectedAPIs.includes(apiKey);
 
@@ -93,7 +93,7 @@ function initAPICheckboxes() {
         `;
         normaldiv.appendChild(checkbox);
 
-        // 添加事件监听器
+        // 設定事件監聽器
         checkbox.querySelector('input').addEventListener('change', function () {
             updateSelectedAPIs();
             checkAdultAPIsSelected();
@@ -101,36 +101,36 @@ function initAPICheckboxes() {
     });
     container.appendChild(normaldiv);
 
-    // 添加成人API列表
+    // 新增成人 API 列表
     addAdultAPI();
 
-    // 初始检查成人内容状态
+    // 初始檢查成人內容狀態
     checkAdultAPIsSelected();
 }
 
-// 添加成人API列表
+// 新增成人 API 列表
 function addAdultAPI() {
-    // 仅在隐藏设置为false时添加成人API组
+    // 僅在隱藏設定為 false 時新增成人 API 群組
     if (!HIDE_BUILTIN_ADULT_APIS && (localStorage.getItem('yellowFilterEnabled') === 'false')) {
         const container = document.getElementById('apiCheckboxes');
 
-        // 添加成人API组标题
+        // 新增成人 API 群組標題
         const adultdiv = document.createElement('div');
         adultdiv.id = 'adultdiv';
         adultdiv.className = 'grid grid-cols-2 gap-2';
         const adultTitle = document.createElement('div');
         adultTitle.className = 'api-group-title adult';
-        adultTitle.innerHTML = `黄色资源采集站 <span class="adult-warning">
+        adultTitle.innerHTML = `成人資源採集站 <span class="adult-warning">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
         </span>`;
         adultdiv.appendChild(adultTitle);
 
-        // 创建成人API源的复选框
+        // 建立成人 API 來源的核取方塊
         Object.keys(API_SITES).forEach(apiKey => {
             const api = API_SITES[apiKey];
-            if (!api.adult) return; // 仅添加成人内容API
+            if (!api.adult) return; // 僅新增成人內容 API
 
             const checked = selectedAPIs.includes(apiKey);
 
@@ -145,7 +145,7 @@ function addAdultAPI() {
             `;
             adultdiv.appendChild(checkbox);
 
-            // 添加事件监听器
+            // 設定事件監聽器
             checkbox.querySelector('input').addEventListener('change', function () {
                 updateSelectedAPIs();
                 checkAdultAPIsSelected();
@@ -155,12 +155,12 @@ function addAdultAPI() {
     }
 }
 
-// 检查是否有成人API被选中
+// 檢查是否有成人 API 被選取
 function checkAdultAPIsSelected() {
-    // 查找所有内置成人API复选框
+    // 尋找所有內建成人 API 核取方塊
     const adultBuiltinCheckboxes = document.querySelectorAll('#apiCheckboxes .api-adult:checked');
 
-    // 查找所有自定义成人API复选框
+    // 尋找所有自訂成人 API 核取方塊
     const customApiCheckboxes = document.querySelectorAll('#customApisList .api-adult:checked');
 
     const hasAdultSelected = adultBuiltinCheckboxes.length > 0 || customApiCheckboxes.length > 0;
@@ -169,36 +169,36 @@ function checkAdultAPIsSelected() {
     const yellowFilterContainer = yellowFilterToggle.closest('div').parentNode;
     const filterDescription = yellowFilterContainer.querySelector('p.filter-description');
 
-    // 如果选择了成人API，禁用黄色内容过滤器
+    // 如果選擇了成人 API，停用成人內容過濾器
     if (hasAdultSelected) {
         yellowFilterToggle.checked = false;
         yellowFilterToggle.disabled = true;
         localStorage.setItem('yellowFilterEnabled', 'false');
 
-        // 添加禁用样式
+        // 新增停用樣式
         yellowFilterContainer.classList.add('filter-disabled');
 
         // 修改描述文字
         if (filterDescription) {
-            filterDescription.innerHTML = '<strong class="text-pink-300">选中黄色资源站时无法启用此过滤</strong>';
+            filterDescription.innerHTML = '<strong class="text-pink-300">選取成人資源站時無法啟用此過濾</strong>';
         }
 
-        // 移除提示信息（如果存在）
+        // 移除提示訊息（如果存在）
         const existingTooltip = yellowFilterContainer.querySelector('.filter-tooltip');
         if (existingTooltip) {
             existingTooltip.remove();
         }
     } else {
-        // 启用黄色内容过滤器
+        // 啟用成人內容過濾器
         yellowFilterToggle.disabled = false;
         yellowFilterContainer.classList.remove('filter-disabled');
 
-        // 恢复原来的描述文字
+        // 恢復原本的描述文字
         if (filterDescription) {
-            filterDescription.innerHTML = '过滤"伦理片"等黄色内容';
+            filterDescription.innerHTML = '過濾「倫理片」等成人內容';
         }
 
-        // 移除提示信息
+        // 移除提示訊息
         const existingTooltip = yellowFilterContainer.querySelector('.filter-tooltip');
         if (existingTooltip) {
             existingTooltip.remove();
@@ -206,13 +206,13 @@ function checkAdultAPIsSelected() {
     }
 }
 
-// 渲染自定义API列表
+// 繪製自訂 API 列表
 function renderCustomAPIsList() {
     const container = document.getElementById('customApisList');
     if (!container) return;
 
     if (customAPIs.length === 0) {
-        container.innerHTML = '<p class="text-xs text-gray-500 text-center my-2">未添加自定义API</p>';
+        container.innerHTML = '<p class="text-xs text-gray-500 text-center my-2">未新增自訂 API</p>';
         return;
     }
 
@@ -222,7 +222,7 @@ function renderCustomAPIsList() {
         apiItem.className = 'flex items-center justify-between p-1 mb-1 bg-[#222] rounded';
         const textColorClass = api.isAdult ? 'text-pink-400' : 'text-white';
         const adultTag = api.isAdult ? '<span class="text-xs text-pink-400 mr-1">(18+)</span>' : '';
-        // 新增 detail 地址显示
+        // 新增 detail 位址顯示
         const detailLine = api.detail ? `<div class="text-xs text-gray-400 truncate">detail: ${api.detail}</div>` : '';
         apiItem.innerHTML = `
             <div class="flex items-center flex-1 min-w-0">
@@ -251,7 +251,7 @@ function renderCustomAPIsList() {
     });
 }
 
-// 编辑自定义API
+// 編輯自訂 API
 function editCustomApi(index) {
     if (index < 0 || index >= customAPIs.length) return;
     const api = customAPIs[index];
@@ -271,7 +271,7 @@ function editCustomApi(index) {
     }
 }
 
-// 更新自定义API
+// 更新自訂 API
 function updateCustomApi(index) {
     if (index < 0 || index >= customAPIs.length) return;
     const nameInput = document.getElementById('customApiName');
@@ -283,15 +283,15 @@ function updateCustomApi(index) {
     const detail = detailInput ? detailInput.value.trim() : '';
     const isAdult = isAdultInput ? isAdultInput.checked : false;
     if (!name || !url) {
-        showToast('请输入API名称和链接', 'warning');
+        showToast('請輸入 API 名稱和連結', 'warning');
         return;
     }
     if (!/^https?:\/\/.+/.test(url)) {
-        showToast('API链接格式不正确，需以http://或https://开头', 'warning');
+        showToast('API 連結格式不正確，需以 http:// 或 https:// 開頭', 'warning');
         return;
     }
     if (url.endsWith('/')) url = url.slice(0, -1);
-    // 保存 detail 字段
+    // 儲存 detail 欄位
     customAPIs[index] = { name, url, detail, isAdult };
     localStorage.setItem('customAPIs', JSON.stringify(customAPIs));
     renderCustomAPIsList();
@@ -302,58 +302,58 @@ function updateCustomApi(index) {
     if (detailInput) detailInput.value = '';
     if (isAdultInput) isAdultInput.checked = false;
     document.getElementById('addCustomApiForm').classList.add('hidden');
-    showToast('已更新自定义API: ' + name, 'success');
+    showToast('已更新自訂 API: ' + name, 'success');
 }
 
-// 取消编辑自定义API
+// 取消編輯自訂 API
 function cancelEditCustomApi() {
-    // 清空表单
+    // 清空表單
     document.getElementById('customApiName').value = '';
     document.getElementById('customApiUrl').value = '';
     document.getElementById('customApiDetail').value = '';
     const isAdultInput = document.getElementById('customApiIsAdult');
     if (isAdultInput) isAdultInput.checked = false;
 
-    // 隐藏表单
+    // 隱藏表單
     document.getElementById('addCustomApiForm').classList.add('hidden');
 
-    // 恢复添加按钮
+    // 恢復新增按鈕
     restoreAddCustomApiButtons();
 }
 
-// 恢复自定义API添加按钮
+// 恢復自訂 API 新增按鈕
 function restoreAddCustomApiButtons() {
     const form = document.getElementById('addCustomApiForm');
     const buttonContainer = form.querySelector('div:last-child');
     buttonContainer.innerHTML = `
-        <button onclick="addCustomApi()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">添加</button>
+        <button onclick="addCustomApi()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">新增</button>
         <button onclick="cancelAddCustomApi()" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>
     `;
 }
 
-// 更新选中的API列表
+// 更新選取的 API 列表
 function updateSelectedAPIs() {
-    // 获取所有内置API复选框
+    // 取得所有內建 API 核取方塊
     const builtInApiCheckboxes = document.querySelectorAll('#apiCheckboxes input:checked');
 
-    // 获取选中的内置API
+    // 取得選取的內建 API
     const builtInApis = Array.from(builtInApiCheckboxes).map(input => input.dataset.api);
 
-    // 获取选中的自定义API
+    // 取得選取的自訂 API
     const customApiCheckboxes = document.querySelectorAll('#customApisList input:checked');
     const customApiIndices = Array.from(customApiCheckboxes).map(input => 'custom_' + input.dataset.customIndex);
 
-    // 合并内置和自定义API
+    // 合併內建和自訂 API
     selectedAPIs = [...builtInApis, ...customApiIndices];
 
-    // 保存到localStorage
+    // 儲存到 localStorage
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
 
-    // 更新显示选中的API数量
+    // 更新顯示選取的 API 數量
     updateSelectedApiCount();
 }
 
-// 更新选中的API数量显示
+// 更新選取的 API 數量顯示
 function updateSelectedApiCount() {
     const countEl = document.getElementById('selectedApiCount');
     if (countEl) {
@@ -361,7 +361,7 @@ function updateSelectedApiCount() {
     }
 }
 
-// 全选或取消全选API
+// 全選或取消全選 API
 function selectAllAPIs(selectAll = true, excludeAdult = false) {
     const checkboxes = document.querySelectorAll('#apiCheckboxes input[type="checkbox"]');
 
@@ -377,7 +377,7 @@ function selectAllAPIs(selectAll = true, excludeAdult = false) {
     checkAdultAPIsSelected();
 }
 
-// 显示添加自定义API表单
+// 顯示新增自訂 API 表單
 function showAddCustomApiForm() {
     const form = document.getElementById('addCustomApiForm');
     if (form) {
@@ -385,7 +385,7 @@ function showAddCustomApiForm() {
     }
 }
 
-// 取消添加自定义API - 修改函数来重用恢复按钮逻辑
+// 取消新增自訂 API - 修改函式來重用恢復按鈕邏輯
 function cancelAddCustomApi() {
     const form = document.getElementById('addCustomApiForm');
     if (form) {
@@ -396,12 +396,12 @@ function cancelAddCustomApi() {
         const isAdultInput = document.getElementById('customApiIsAdult');
         if (isAdultInput) isAdultInput.checked = false;
 
-        // 确保按钮是添加按钮
+        // 確保按鈕是新增按鈕
         restoreAddCustomApiButtons();
     }
 }
 
-// 添加自定义API
+// 新增自訂 API
 function addCustomApi() {
     const nameInput = document.getElementById('customApiName');
     const urlInput = document.getElementById('customApiUrl');
@@ -412,24 +412,24 @@ function addCustomApi() {
     const detail = detailInput ? detailInput.value.trim() : '';
     const isAdult = isAdultInput ? isAdultInput.checked : false;
     if (!name || !url) {
-        showToast('请输入API名称和链接', 'warning');
+        showToast('請輸入 API 名稱和連結', 'warning');
         return;
     }
     if (!/^https?:\/\/.+/.test(url)) {
-        showToast('API链接格式不正确，需以http://或https://开头', 'warning');
+        showToast('API 連結格式不正確，需以 http:// 或 https:// 開頭', 'warning');
         return;
     }
     if (url.endsWith('/')) {
         url = url.slice(0, -1);
     }
-    // 保存 detail 字段
+    // 儲存 detail 欄位
     customAPIs.push({ name, url, detail, isAdult });
     localStorage.setItem('customAPIs', JSON.stringify(customAPIs));
     const newApiIndex = customAPIs.length - 1;
     selectedAPIs.push('custom_' + newApiIndex);
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
 
-    // 重新渲染自定义API列表
+    // 重新繪製自訂 API 列表
     renderCustomAPIsList();
     updateSelectedApiCount();
     checkAdultAPIsSelected();
@@ -438,24 +438,24 @@ function addCustomApi() {
     if (detailInput) detailInput.value = '';
     if (isAdultInput) isAdultInput.checked = false;
     document.getElementById('addCustomApiForm').classList.add('hidden');
-    showToast('已添加自定义API: ' + name, 'success');
+    showToast('已新增自訂 API: ' + name, 'success');
 }
 
-// 移除自定义API
+// 移除自訂 API
 function removeCustomApi(index) {
     if (index < 0 || index >= customAPIs.length) return;
 
     const apiName = customAPIs[index].name;
 
-    // 从列表中移除API
+    // 從列表中移除 API
     customAPIs.splice(index, 1);
     localStorage.setItem('customAPIs', JSON.stringify(customAPIs));
 
-    // 从选中列表中移除此API
+    // 從選取列表中移除此 API
     const customApiId = 'custom_' + index;
     selectedAPIs = selectedAPIs.filter(id => id !== customApiId);
 
-    // 更新大于此索引的自定义API索引
+    // 更新大於此索引的自訂 API 索引
     selectedAPIs = selectedAPIs.map(id => {
         if (id.startsWith('custom_')) {
             const currentIndex = parseInt(id.replace('custom_', ''));
@@ -468,16 +468,16 @@ function removeCustomApi(index) {
 
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
 
-    // 重新渲染自定义API列表
+    // 重新繪製自訂 API 列表
     renderCustomAPIsList();
 
-    // 更新选中的API数量
+    // 更新選取的 API 數量
     updateSelectedApiCount();
 
-    // 重新检查成人API选中状态
+    // 重新檢查成人 API 選取狀態
     checkAdultAPIsSelected();
 
-    showToast('已移除自定义API: ' + apiName, 'info');
+    showToast('已移除自訂 API: ' + apiName, 'info');
 }
 
 function toggleSettings(e) {
@@ -496,18 +496,18 @@ function toggleSettings(e) {
     }
 }
 
-// 设置事件监听器
+// 設定事件監聽器
 function setupEventListeners() {
-    // 回车搜索
+    // 輸入 Enter 搜尋
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             search();
         }
     });
 
-    // 点击外部关闭设置面板和历史记录面板
+    // 點擊外部關閉設定面板和歷史紀錄面板
     document.addEventListener('click', function (e) {
-        // 关闭设置面板
+        // 關閉設定面板
         const settingsPanel = document.querySelector('#settingsPanel.show');
         const settingsButton = document.querySelector('#settingsPanel .close-btn');
 
@@ -517,7 +517,7 @@ function setupEventListeners() {
             settingsPanel.classList.remove('show');
         }
 
-        // 关闭历史记录面板
+        // 關閉歷史紀錄面板
         const historyPanel = document.querySelector('#historyPanel.show');
         const historyButton = document.querySelector('#historyPanel .close-btn');
 
@@ -528,13 +528,13 @@ function setupEventListeners() {
         }
     });
 
-    // 黄色内容过滤开关事件绑定
+    // 成人內容過濾開關事件繫結
     const yellowFilterToggle = document.getElementById('yellowFilterToggle');
     if (yellowFilterToggle) {
         yellowFilterToggle.addEventListener('change', function (e) {
             localStorage.setItem('yellowFilterEnabled', e.target.checked);
 
-            // 控制黄色内容接口的显示状态
+            // 控制成人內容介面的顯示狀態
             const adultdiv = document.getElementById('adultdiv');
             if (adultdiv) {
                 if (e.target.checked === true) {
@@ -543,13 +543,13 @@ function setupEventListeners() {
                     adultdiv.style.display = ''
                 }
             } else {
-                // 添加成人API列表
+                // 新增成人 API 列表
                 addAdultAPI();
             }
         });
     }
 
-    // 广告过滤开关事件绑定
+    // 廣告過濾開關事件繫結
     const adFilterToggle = document.getElementById('adFilterToggle');
     if (adFilterToggle) {
         adFilterToggle.addEventListener('change', function (e) {
@@ -558,43 +558,43 @@ function setupEventListeners() {
     }
 }
 
-// 重置搜索区域
+// 重置搜尋區域
 function resetSearchArea() {
-    // 清理搜索结果
+    // 清理搜尋結果
     document.getElementById('results').innerHTML = '';
     document.getElementById('searchInput').value = '';
 
-    // 恢复搜索区域的样式
+    // 恢復搜尋區域的樣式
     document.getElementById('searchArea').classList.add('flex-1');
     document.getElementById('searchArea').classList.remove('mb-8');
     document.getElementById('resultsArea').classList.add('hidden');
 
-    // 确保页脚正确显示，移除相对定位
+    // 確保頁腳正確顯示，移除相對定位
     const footer = document.querySelector('.footer');
     if (footer) {
         footer.style.position = '';
     }
 
-    // 如果有豆瓣功能，检查是否需要显示豆瓣推荐区域
+    // 如果有豆瓣功能，檢查是否需要顯示豆瓣推薦區域
     if (typeof updateDoubanVisibility === 'function') {
         updateDoubanVisibility();
     }
 
-    // 重置URL为主页
+    // 重置 URL 為首頁
     try {
         window.history.pushState(
             {},
-            `LibreTV - 免费在线视频搜索与观看平台`,
+            `LibreTV - 免費線上影片搜尋與觀看平台`,
             `/`
         );
-        // 更新页面标题
-        document.title = `LibreTV - 免费在线视频搜索与观看平台`;
+        // 更新頁面標題
+        document.title = `LibreTV - 免費線上影片搜尋與觀看平台`;
     } catch (e) {
-        console.error('更新浏览器历史失败:', e);
+        console.error('更新瀏覽器歷程失敗:', e);
     }
 }
 
-// 获取自定义API信息
+// 取得自訂 API 資訊
 function getCustomApiInfo(customApiIndex) {
     const index = parseInt(customApiIndex);
     if (isNaN(index) || index < 0 || index >= customAPIs.length) {
@@ -603,14 +603,14 @@ function getCustomApiInfo(customApiIndex) {
     return customAPIs[index];
 }
 
-// 搜索功能 - 修改为支持多选API和多页结果
+// 搜尋功能 - 修改為支援多選 API 和多頁結果
 async function search() {
-    // 强化的密码保护校验 - 防止绕过
+    // 強化的密碼保護驗證 - 防止繞過
     try {
         if (window.ensurePasswordProtection) {
             window.ensurePasswordProtection();
         } else {
-            // 兼容性检查
+            // 相容性檢查
             if (window.isPasswordProtected && window.isPasswordVerified) {
                 if (window.isPasswordProtected() && !window.isPasswordVerified()) {
                     showPasswordModal && showPasswordModal();
@@ -625,59 +625,59 @@ async function search() {
     const query = document.getElementById('searchInput').value.trim();
 
     if (!query) {
-        showToast('请输入搜索内容', 'info');
+        showToast('請輸入搜尋內容', 'info');
         return;
     }
 
     if (selectedAPIs.length === 0) {
-        showToast('请至少选择一个API源', 'warning');
+        showToast('請至少選擇一個 API 來源', 'warning');
         return;
     }
 
     showLoading();
 
     try {
-        // 保存搜索历史
+        // 儲存搜尋歷史
         saveSearchHistory(query);
 
-        // 从所有选中的API源搜索
+        // 從所有選取的 API 來源搜尋
         let allResults = [];
         const searchPromises = selectedAPIs.map(apiId => 
             searchByAPIAndKeyWord(apiId, query)
         );
 
-        // 等待所有搜索请求完成
+        // 等待所有搜尋請求完成
         const resultsArray = await Promise.all(searchPromises);
 
-        // 合并所有结果
+        // 合併所有結果
         resultsArray.forEach(results => {
             if (Array.isArray(results) && results.length > 0) {
                 allResults = allResults.concat(results);
             }
         });
 
-        // 对搜索结果进行排序：按名称优先，名称相同时按接口源排序
+        // 對搜尋結果進行排序：按名稱優先，名稱相同時按介面來源排序
         allResults.sort((a, b) => {
-            // 首先按照视频名称排序
+            // 首先按照影片名稱排序
             const nameCompare = (a.vod_name || '').localeCompare(b.vod_name || '');
             if (nameCompare !== 0) return nameCompare;
             
-            // 如果名称相同，则按照来源排序
+            // 如果名稱相同，則按照來源排序
             return (a.source_name || '').localeCompare(b.source_name || '');
         });
 
-        // 更新搜索结果计数
+        // 更新搜尋結果計數
         const searchResultsCount = document.getElementById('searchResultsCount');
         if (searchResultsCount) {
             searchResultsCount.textContent = allResults.length;
         }
 
-        // 显示结果区域，调整搜索区域
+        // 顯示結果區域，調整搜尋區域
         document.getElementById('searchArea').classList.remove('flex-1');
         document.getElementById('searchArea').classList.add('mb-8');
         document.getElementById('resultsArea').classList.remove('hidden');
 
-        // 隐藏豆瓣推荐区域（如果存在）
+        // 隱藏豆瓣推薦區域（如果存在）
         const doubanArea = document.getElementById('doubanArea');
         if (doubanArea) {
             doubanArea.classList.add('hidden');
@@ -685,7 +685,7 @@ async function search() {
 
         const resultsDiv = document.getElementById('results');
 
-        // 如果没有结果
+        // 如果沒有結果
         if (!allResults || allResults.length === 0) {
             resultsDiv.innerHTML = `
                 <div class="col-span-full text-center py-16">
@@ -693,42 +693,42 @@ async function search() {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <h3 class="mt-2 text-lg font-medium text-gray-400">没有找到匹配的结果</h3>
-                    <p class="mt-1 text-sm text-gray-500">请尝试其他关键词或更换数据源</p>
+                    <h3 class="mt-2 text-lg font-medium text-gray-400">沒有找到符合的結果</h3>
+                    <p class="mt-1 text-sm text-gray-500">請嘗試其他關鍵字或更換資料來源</p>
                 </div>
             `;
             hideLoading();
             return;
         }
 
-        // 有搜索结果时，才更新URL
+        // 有搜尋結果時，才更新 URL
         try {
-            // 使用URI编码确保特殊字符能够正确显示
+            // 使用 URI 編碼確保特殊字元能夠正確顯示
             const encodedQuery = encodeURIComponent(query);
-            // 使用HTML5 History API更新URL，不刷新页面
+            // 使用 HTML5 History API 更新 URL，不重新整理頁面
             window.history.pushState(
                 { search: query },
-                `搜索: ${query} - LibreTV`,
+                `搜尋: ${query} - LibreTV`,
                 `/s=${encodedQuery}`
             );
-            // 更新页面标题
-            document.title = `搜索: ${query} - LibreTV`;
+            // 更新頁面標題
+            document.title = `搜尋: ${query} - LibreTV`;
         } catch (e) {
-            console.error('更新浏览器历史失败:', e);
-            // 如果更新URL失败，继续执行搜索
+            console.error('更新瀏覽器歷程失敗:', e);
+            // 如果更新 URL 失敗，繼續執行搜尋
         }
 
-        // 处理搜索结果过滤：如果启用了黄色内容过滤，则过滤掉分类含有敏感内容的项目
+        // 處理搜尋結果過濾：如果啟用了成人內容過濾，則過濾掉分類含有敏感內容的專案
         const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
         if (yellowFilterEnabled) {
-            const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
+            const banned = ['倫理片', '福利', '里番動漫', '門事件', '蘿莉少女', '制服誘惑', '國產傳媒', 'cosplay', '黑絲誘惑', '無碼', '日本無碼', '有碼', '日本有碼', 'SWAG', '網紅主播', '色情片', '同性片', '福利影片', '福利片'];
             allResults = allResults.filter(item => {
                 const typeName = item.type_name || '';
                 return !banned.some(keyword => typeName.includes(keyword));
             });
         }
 
-        // 添加XSS保护，使用textContent和属性转义
+        // 新增 XSS 保護，使用 textContent 和屬性跳脫
         const safeResults = allResults.map(item => {
             const safeId = item.vod_id ? item.vod_id.toString().replace(/[^\w-]/g, '') : '';
             const safeName = (item.vod_name || '').toString()
@@ -739,11 +739,11 @@ async function search() {
                 `<span class="bg-[#222] text-xs px-1.5 py-0.5 rounded-full">${item.source_name}</span>` : '';
             const sourceCode = item.source_code || '';
 
-            // 添加API URL属性，用于详情获取
+            // 新增 API URL 屬性，用於取得詳情
             const apiUrlAttr = item.api_url ?
                 `data-api-url="${item.api_url.replace(/"/g, '&quot;')}"` : '';
 
-            // 修改为水平卡片布局，图片在左侧，文本在右侧，并优化样式
+            // 修改為水平卡片版面配置，圖片在左側，文字在右側，並最佳化樣式
             const hasCover = item.vod_pic && item.vod_pic.startsWith('http');
 
             return `
@@ -754,7 +754,7 @@ async function search() {
                         <div class="relative flex-shrink-0 search-card-img-container">
                             <img src="${item.vod_pic}" alt="${safeName}" 
                                  class="h-full w-full object-cover transition-transform hover:scale-110" 
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');" 
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=無封面'; this.classList.add('object-contain');" 
                                  loading="lazy">
                             <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
                         </div>` : ''}
@@ -774,13 +774,13 @@ async function search() {
                                       </span>` : ''}
                                 </div>
                                 <p class="text-gray-400 line-clamp-2 overflow-hidden ${hasCover ? '' : 'text-center'} mb-2">
-                                    ${(item.vod_remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
+                                    ${(item.vod_remarks || '暫無介紹').toString().replace(/</g, '&lt;')}
                                 </p>
                             </div>
                             
                             <div class="flex justify-between items-center mt-1 pt-1 border-t border-gray-800">
                                 ${sourceInfo ? `<div>${sourceInfo}</div>` : '<div></div>'}
-                                <!-- 接口名称过长会被挤变形
+                                <!-- 介面名稱過長會被擠壓變形
                                 <div>
                                     <span class="text-gray-500 flex items-center hover:text-blue-400 transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -799,18 +799,18 @@ async function search() {
 
         resultsDiv.innerHTML = safeResults;
     } catch (error) {
-        console.error('搜索错误:', error);
+        console.error('搜尋錯誤:', error);
         if (error.name === 'AbortError') {
-            showToast('搜索请求超时，请检查网络连接', 'error');
+            showToast('搜尋請求逾時，請檢查網路連線', 'error');
         } else {
-            showToast('搜索请求失败，请稍后重试', 'error');
+            showToast('搜尋請求失敗，請稍後重試', 'error');
         }
     } finally {
         hideLoading();
     }
 }
 
-// 切换清空按钮的显示状态
+// 切換清空按鈕的顯示狀態
 function toggleClearButton() {
     const searchInput = document.getElementById('searchInput');
     const clearButton = document.getElementById('clearSearchInput');
@@ -821,7 +821,7 @@ function toggleClearButton() {
     }
 }
 
-// 清空搜索框内容
+// 清空搜尋框內容
 function clearSearchInput() {
     const searchInput = document.getElementById('searchInput');
     searchInput.value = '';
@@ -829,34 +829,34 @@ function clearSearchInput() {
     clearButton.classList.add('hidden');
 }
 
-// 劫持搜索框的value属性以检测外部修改
+// 劫持搜尋框的 value 屬性以偵測外部修改
 function hookInput() {
     const input = document.getElementById('searchInput');
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
 
-    // 重写 value 属性的 getter 和 setter
+    // 覆寫 value 屬性的 getter 與 setter
     Object.defineProperty(input, 'value', {
         get: function () {
-            // 确保读取时返回字符串（即使原始值为 undefined/null）
+            // 確保讀取時回傳字串（即使原始值為 undefined/null）
             const originalValue = descriptor.get.call(this);
             return originalValue != null ? String(originalValue) : '';
         },
         set: function (value) {
-            // 显式将值转换为字符串后写入
+            // 顯式將值轉換為字串後寫入
             const strValue = String(value);
             descriptor.set.call(this, strValue);
             this.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
 
-    // 初始化输入框值为空字符串（避免初始值为 undefined）
+    // 初始化輸入框值為空字串（避免初始值為 undefined）
     input.value = '';
 }
 document.addEventListener('DOMContentLoaded', hookInput);
 
-// 显示详情 - 修改为支持自定义API
+// 顯示詳情 - 修改為支援自訂 API
 async function showDetails(id, vod_name, sourceCode) {
-    // 密码保护校验
+    // 密碼保護驗證
     if (window.isPasswordProtected && window.isPasswordVerified) {
         if (window.isPasswordProtected() && !window.isPasswordVerified()) {
             showPasswordModal && showPasswordModal();
@@ -864,32 +864,32 @@ async function showDetails(id, vod_name, sourceCode) {
         }
     }
     if (!id) {
-        showToast('视频ID无效', 'error');
+        showToast('影片 ID 無效', 'error');
         return;
     }
 
     showLoading();
     try {
-        // 构建API参数
+        // 建立 API 參數
         let apiParams = '';
 
-        // 处理自定义API源
+        // 處理自訂 API 來源
         if (sourceCode.startsWith('custom_')) {
             const customIndex = sourceCode.replace('custom_', '');
             const customApi = getCustomApiInfo(customIndex);
             if (!customApi) {
-                showToast('自定义API配置无效', 'error');
+                showToast('自訂 API 設定無效', 'error');
                 hideLoading();
                 return;
             }
-            // 传递 detail 字段
+            // 傳遞 detail 欄位
             if (customApi.detail) {
                 apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
             } else {
                 apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
             }
         } else {
-            // 内置API
+            // 內建 API
             apiParams = '&source=' + sourceCode;
         }
 
@@ -904,16 +904,16 @@ async function showDetails(id, vod_name, sourceCode) {
         const modalTitle = document.getElementById('modalTitle');
         const modalContent = document.getElementById('modalContent');
 
-        // 显示来源信息
+        // 顯示來源資訊
         const sourceName = data.videoInfo && data.videoInfo.source_name ?
             ` <span class="text-sm font-normal text-gray-400">(${data.videoInfo.source_name})</span>` : '';
 
-        // 不对标题进行截断处理，允许完整显示
-        modalTitle.innerHTML = `<span class="break-words">${vod_name || '未知视频'}</span>${sourceName}`;
-        currentVideoTitle = vod_name || '未知视频';
+        // 不對標題進行截斷處理，允許完整顯示
+        modalTitle.innerHTML = `<span class="break-words">${vod_name || '未知影片'}</span>${sourceName}`;
+        currentVideoTitle = vod_name || '未知影片';
 
         if (data.episodes && data.episodes.length > 0) {
-            // 构建详情信息HTML
+            // 建立詳情資訊 HTML
             let detailInfoHtml = '';
             if (data.videoInfo) {
                 // Prepare description text, strip HTML and trim whitespace
@@ -927,16 +927,16 @@ async function showDetails(id, vod_name, sourceCode) {
                 <div class="modal-detail-info">
                     ${hasGridContent ? `
                     <div class="detail-grid">
-                        ${data.videoInfo.type ? `<div class="detail-item"><span class="detail-label">类型:</span> <span class="detail-value">${data.videoInfo.type}</span></div>` : ''}
+                        ${data.videoInfo.type ? `<div class="detail-item"><span class="detail-label">類型:</span> <span class="detail-value">${data.videoInfo.type}</span></div>` : ''}
                         ${data.videoInfo.year ? `<div class="detail-item"><span class="detail-label">年份:</span> <span class="detail-value">${data.videoInfo.year}</span></div>` : ''}
-                        ${data.videoInfo.area ? `<div class="detail-item"><span class="detail-label">地区:</span> <span class="detail-value">${data.videoInfo.area}</span></div>` : ''}
-                        ${data.videoInfo.director ? `<div class="detail-item"><span class="detail-label">导演:</span> <span class="detail-value">${data.videoInfo.director}</span></div>` : ''}
+                        ${data.videoInfo.area ? `<div class="detail-item"><span class="detail-label">地區:</span> <span class="detail-value">${data.videoInfo.area}</span></div>` : ''}
+                        ${data.videoInfo.director ? `<div class="detail-item"><span class="detail-label">導演:</span> <span class="detail-value">${data.videoInfo.director}</span></div>` : ''}
                         ${data.videoInfo.actor ? `<div class="detail-item"><span class="detail-label">主演:</span> <span class="detail-value">${data.videoInfo.actor}</span></div>` : ''}
-                        ${data.videoInfo.remarks ? `<div class="detail-item"><span class="detail-label">备注:</span> <span class="detail-value">${data.videoInfo.remarks}</span></div>` : ''}
+                        ${data.videoInfo.remarks ? `<div class="detail-item"><span class="detail-label">備註:</span> <span class="detail-value">${data.videoInfo.remarks}</span></div>` : ''}
                     </div>` : ''}
                     ${descriptionText ? `
                     <div class="detail-desc">
-                        <p class="detail-label">简介:</p>
+                        <p class="detail-label">簡介:</p>
                         <p class="detail-desc-content">${descriptionText}</p>
                     </div>` : ''}
                 </div>
@@ -961,7 +961,7 @@ async function showDetails(id, vod_name, sourceCode) {
                         <span class="text-gray-400 text-sm">共 ${data.episodes.length} 集</span>
                     </div>
                     <button onclick="copyLinks()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
-                        复制链接
+                        複製連結
                     </button>
                 </div>
                 <div id="episodesGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
@@ -971,24 +971,24 @@ async function showDetails(id, vod_name, sourceCode) {
         } else {
             modalContent.innerHTML = `
                 <div class="text-center py-8">
-                    <div class="text-red-400 mb-2">❌ 未找到播放资源</div>
-                    <div class="text-gray-500 text-sm">该视频可能暂时无法播放，请尝试其他视频</div>
+                    <div class="text-red-400 mb-2">❌ 未找到播放資源</div>
+                    <div class="text-gray-500 text-sm">該影片可能暫時無法播放，請嘗試其他影片</div>
                 </div>
             `;
         }
 
         modal.classList.remove('hidden');
     } catch (error) {
-        console.error('获取详情错误:', error);
-        showToast('获取详情失败，请稍后重试', 'error');
+        console.error('獲取詳情錯誤:', error);
+        showToast('獲取詳情失敗，請稍後重試', 'error');
     } finally {
         hideLoading();
     }
 }
 
-// 更新播放视频函数，修改为使用/watch路径而不是直接打开player.html
+// 更新播放影片函式，修改為使用 /watch 路徑而不是直接開啟 player.html
 function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
-    // 密码保护校验
+    // 密碼保護驗證
     if (window.isPasswordProtected && window.isPasswordVerified) {
         if (window.isPasswordProtected() && !window.isPasswordVerified()) {
             showPasswordModal && showPasswordModal();
@@ -996,73 +996,73 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         }
     }
 
-    // 获取当前路径作为返回页面
+    // 取得目前路徑作為返回頁面
     let currentPath = window.location.href;
 
-    // 构建播放页面URL，使用watch.html作为中间跳转页
+    // 建立播放頁面 URL，使用 watch.html 作為中間跳轉頁
     let watchUrl = `watch.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
-    // 添加返回URL参数
+    // 新增返回 URL 參數
     if (currentPath.includes('index.html') || currentPath.endsWith('/')) {
         watchUrl += `&back=${encodeURIComponent(currentPath)}`;
     }
 
-    // 保存当前状态到localStorage
+    // 儲存目前狀態到 localStorage
     try {
-        localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
+        localStorage.setItem('currentVideoTitle', vod_name || '未知影片');
         localStorage.setItem('currentEpisodes', JSON.stringify(currentEpisodes));
         localStorage.setItem('currentEpisodeIndex', episodeIndex);
         localStorage.setItem('currentSourceCode', sourceCode || '');
         localStorage.setItem('lastPlayTime', Date.now());
         localStorage.setItem('lastSearchPage', currentPath);
-        localStorage.setItem('lastPageUrl', currentPath);  // 确保保存返回页面URL
+        localStorage.setItem('lastPageUrl', currentPath);  // 確保儲存返回頁面 URL
     } catch (e) {
-        console.error('保存播放状态失败:', e);
+        console.error('儲存播放狀態失敗:', e);
     }
 
-    // 在当前标签页中打开播放页面
+    // 在目前分頁中開啟播放頁面
     window.location.href = watchUrl;
 }
 
-// 弹出播放器页面
+// 快顯播放器頁面
 function showVideoPlayer(url) {
-    // 在打开播放器前，隐藏详情弹窗
+    // 在開啟播放器前，隱藏詳情彈出視窗
     const detailModal = document.getElementById('modal');
     if (detailModal) {
         detailModal.classList.add('hidden');
     }
-    // 临时隐藏搜索结果和豆瓣区域，防止高度超出播放器而出现滚动条
+    // 臨時隱藏搜尋結果和豆瓣區域，防止高度超出播放器而出現捲動條
     document.getElementById('resultsArea').classList.add('hidden');
     document.getElementById('doubanArea').classList.add('hidden');
-    // 在框架中打开播放页面
+    // 在框架中開啟播放頁面
     videoPlayerFrame = document.createElement('iframe');
     videoPlayerFrame.id = 'VideoPlayerFrame';
     videoPlayerFrame.className = 'fixed w-full h-screen z-40';
     videoPlayerFrame.src = url;
     document.body.appendChild(videoPlayerFrame);
-    // 将焦点移入iframe
+    // 將焦點移入 iframe
     videoPlayerFrame.focus();
 }
 
-// 关闭播放器页面
+// 關閉播放器頁面
 function closeVideoPlayer(home = false) {
     videoPlayerFrame = document.getElementById('VideoPlayerFrame');
     if (videoPlayerFrame) {
         videoPlayerFrame.remove();
-        // 恢复搜索结果显示
+        // 恢復搜尋結果顯示
         document.getElementById('resultsArea').classList.remove('hidden');
-        // 关闭播放器时也隐藏详情弹窗
+        // 關閉播放器時也隱藏詳情彈出視窗
         const detailModal = document.getElementById('modal');
         if (detailModal) {
             detailModal.classList.add('hidden');
         }
-        // 如果启用豆瓣区域则显示豆瓣区域
+        // 如果啟用豆瓣區域則顯示豆瓣區域
         if (localStorage.getItem('doubanEnabled') === 'true') {
             document.getElementById('doubanArea').classList.remove('hidden');
         }
     }
     if (home) {
-        // 刷新主页
+        // 重新整理首頁
         window.location.href = '/'
     }
 }
@@ -1085,17 +1085,17 @@ function playNextEpisode(sourceCode) {
     }
 }
 
-// 处理播放器加载错误
+// 處理播放器載入錯誤
 function handlePlayerError() {
     hideLoading();
-    showToast('视频播放加载失败，请尝试其他视频源', 'error');
+    showToast('影片播放載入失敗，請嘗試其他影片來源', 'error');
 }
 
-// 辅助函数用于渲染剧集按钮（使用当前的排序状态）
+// 輔助函式用於繪製劇集按鈕（使用目前的排序狀態）
 function renderEpisodes(vodName, sourceCode, vodId) {
     const episodes = episodesReversed ? [...currentEpisodes].reverse() : currentEpisodes;
     return episodes.map((episode, index) => {
-        // 根据倒序状态计算真实的剧集索引
+        // 根據倒序狀態計算真實的劇集索引
         const realIndex = episodesReversed ? currentEpisodes.length - 1 - index : index;
         return `
             <button id="episode-${realIndex}" onclick="playVideo('${episode}','${vodName.replace(/"/g, '&quot;')}', '${sourceCode}', ${realIndex}, '${vodId}')" 
@@ -1106,27 +1106,27 @@ function renderEpisodes(vodName, sourceCode, vodId) {
     }).join('');
 }
 
-// 复制视频链接到剪贴板
+// 複製影片連結到剪貼簿
 function copyLinks() {
     const episodes = episodesReversed ? [...currentEpisodes].reverse() : currentEpisodes;
     const linkList = episodes.join('\r\n');
     navigator.clipboard.writeText(linkList).then(() => {
-        showToast('播放链接已复制', 'success');
+        showToast('播放連結已複製', 'success');
     }).catch(err => {
-        showToast('复制失败，请检查浏览器权限', 'error');
+        showToast('複製失敗，請檢查瀏覽器權限', 'error');
     });
 }
 
-// 切换排序状态的函数
+// 切換排序狀態的函式
 function toggleEpisodeOrder(sourceCode, vodId) {
     episodesReversed = !episodesReversed;
-    // 重新渲染剧集区域，使用 currentVideoTitle 作为视频标题
+    // 重新繪製劇集區域，使用 currentVideoTitle 作為影片標題
     const episodesGrid = document.getElementById('episodesGrid');
     if (episodesGrid) {
         episodesGrid.innerHTML = renderEpisodes(currentVideoTitle, sourceCode, vodId);
     }
 
-    // 更新按钮文本和箭头方向
+    // 更新按鈕文字和箭頭方向
     const toggleBtn = document.querySelector(`button[onclick="toggleEpisodeOrder('${sourceCode}', '${vodId}')"]`);
     if (toggleBtn) {
         toggleBtn.querySelector('span').textContent = episodesReversed ? '正序排列' : '倒序排列';
@@ -1137,9 +1137,9 @@ function toggleEpisodeOrder(sourceCode, vodId) {
     }
 }
 
-// 从URL导入配置
+// 從 URL 匯入設定
 async function importConfigFromUrl() {
-    // 创建模态框元素
+    // 建立彈出視窗元素
     let modal = document.getElementById('importUrlModal');
     if (modal) {
         document.body.removeChild(modal);
@@ -1153,95 +1153,95 @@ async function importConfigFromUrl() {
         <div class="bg-[#191919] rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
             <button id="closeUrlModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
             
-            <h3 class="text-xl font-bold mb-4">从URL导入配置</h3>
+            <h3 class="text-xl font-bold mb-4">從 URL 匯入設定</h3>
             
             <div class="mb-4">
-                <input type="text" id="configUrl" placeholder="输入配置文件URL" 
+                <input type="text" id="configUrl" placeholder="輸入設定檔案 URL" 
                        class="w-full px-3 py-2 bg-[#222] border border-[#333] rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
             
             <div class="flex justify-end space-x-2">
-                <button id="confirmUrlImport" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">导入</button>
+                <button id="confirmUrlImport" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">匯入</button>
                 <button id="cancelUrlImport" class="bg-[#444] hover:bg-[#555] text-white px-4 py-2 rounded">取消</button>
             </div>
         </div>`;
 
     document.body.appendChild(modal);
 
-    // 关闭按钮事件
+    // 關閉按鈕事件
     document.getElementById('closeUrlModal').addEventListener('click', () => {
         document.body.removeChild(modal);
     });
 
-    // 取消按钮事件
+    // 取消按鈕事件
     document.getElementById('cancelUrlImport').addEventListener('click', () => {
         document.body.removeChild(modal);
     });
 
-    // 确认导入按钮事件
+    // 確認匯入按鈕事件
     document.getElementById('confirmUrlImport').addEventListener('click', async () => {
         const url = document.getElementById('configUrl').value.trim();
         if (!url) {
-            showToast('请输入配置文件URL', 'warning');
+            showToast('請輸入設定檔案 URL', 'warning');
             return;
         }
 
-        // 验证URL格式
+        // 驗證 URL 格式
         try {
             const urlObj = new URL(url);
             if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
-                showToast('URL必须以http://或https://开头', 'warning');
+                showToast('URL 必須以 http:// 或 https:// 開頭', 'warning');
                 return;
             }
         } catch (e) {
-            showToast('URL格式不正确', 'warning');
+            showToast('URL 格式不正確', 'warning');
             return;
         }
 
-        showLoading('正在从URL导入配置...');
+        showLoading('正在從 URL 匯入設定...');
 
         try {
-            // 获取配置文件 - 直接请求URL
+            // 取得設定檔案 - 直接請求 URL
             const response = await fetch(url, {
                 mode: 'cors',
                 headers: {
                     'Accept': 'application/json'
                 }
             });
-            if (!response.ok) throw '获取配置文件失败';
+            if (!response.ok) throw '取得設定檔案失敗';
 
-            // 验证响应内容类型
+            // 驗證回應內容類型
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                throw '响应不是有效的JSON格式';
+                throw '回應不是有效的 JSON 格式';
             }
 
             const config = await response.json();
-            if (config.name !== 'LibreTV-Settings') throw '配置文件格式不正确';
+            if (config.name !== 'LibreTV-Settings') throw '設定檔案格式不正確';
 
-            // 验证哈希
+            // 驗證雜湊
             const dataHash = await sha256(JSON.stringify(config.data));
-            if (dataHash !== config.hash) throw '配置文件哈希值不匹配';
+            if (dataHash !== config.hash) throw '設定檔案雜湊值不符';
 
-            // 导入配置
+            // 匯入設定
             for (let item in config.data) {
                 localStorage.setItem(item, config.data[item]);
             }
 
-            showToast('配置文件导入成功，3 秒后自动刷新本页面。', 'success');
+            showToast('設定檔案匯入成功，3 秒後自動重新整理本頁面。', 'success');
             setTimeout(() => {
                 window.location.reload();
             }, 3000);
         } catch (error) {
-            const message = typeof error === 'string' ? error : '导入配置失败';
-            showToast(`从URL导入配置出错 (${message})`, 'error');
+            const message = typeof error === 'string' ? error : '匯入設定失敗';
+            showToast(`從 URL 匯入設定出錯 (${message})`, 'error');
         } finally {
             hideLoading();
             document.body.removeChild(modal);
         }
     });
 
-    // 点击模态框外部关闭
+    // 點擊彈出視窗外部關閉
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             document.body.removeChild(modal);
@@ -1249,51 +1249,51 @@ async function importConfigFromUrl() {
     });
 }
 
-// 配置文件导入功能
+// 設定檔案匯入功能
 async function importConfig() {
     showImportBox(async (file) => {
         try {
-            // 检查文件类型
-            if (!(file.type === 'application/json' || file.name.endsWith('.json'))) throw '文件类型不正确';
+            // 檢查檔案類型
+            if (!(file.type === 'application/json' || file.name.endsWith('.json'))) throw '檔案類型不正確';
 
-            // 检查文件大小
-            if (file.size > 1024 * 1024 * 10) throw new Error('文件大小超过 10MB');
+            // 檢查檔案大小
+            if (file.size > 1024 * 1024 * 10) throw new Error('檔案大小超過 10MB');
 
-            // 读取文件内容
+            // 讀取檔案內容
             const content = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject('文件读取失败');
+                reader.onerror = () => reject('檔案讀取失敗');
                 reader.readAsText(file);
             });
 
-            // 解析并验证配置
+            // 解析並驗證設定
             const config = JSON.parse(content);
-            if (config.name !== 'LibreTV-Settings') throw '配置文件格式不正确';
+            if (config.name !== 'LibreTV-Settings') throw '設定檔案格式不正確';
 
-            // 验证哈希
+            // 驗證雜湊
             const dataHash = await sha256(JSON.stringify(config.data));
-            if (dataHash !== config.hash) throw '配置文件哈希值不匹配';
+            if (dataHash !== config.hash) throw '設定檔案雜湊值不符';
 
-            // 导入配置
+            // 匯入設定
             for (let item in config.data) {
                 localStorage.setItem(item, config.data[item]);
             }
 
-            showToast('配置文件导入成功，3 秒后自动刷新本页面。', 'success');
+            showToast('設定檔案匯入成功，3 秒後自動重新整理本頁面。', 'success');
             setTimeout(() => {
                 window.location.reload();
             }, 3000);
         } catch (error) {
-            const message = typeof error === 'string' ? error : '配置文件格式错误';
-            showToast(`配置文件读取出错 (${message})`, 'error');
+            const message = typeof error === 'string' ? error : '設定檔案格式錯誤';
+            showToast(`設定檔案讀取出錯 (${message})`, 'error');
         }
     });
 }
 
-// 配置文件导出功能
+// 設定檔案匯出功能
 async function exportConfig() {
-    // 存储配置数据
+    // 儲存設定資料
     const config = {};
     const items = {};
 
@@ -1306,7 +1306,7 @@ async function exportConfig() {
         'hasInitializedDefaults'
     ];
 
-    // 导出设置项
+    // 匯出設定項
     settingsToExport.forEach(key => {
         const value = localStorage.getItem(key);
         if (value !== null) {
@@ -1314,7 +1314,7 @@ async function exportConfig() {
         }
     });
 
-    // 导出历史记录
+    // 匯出歷史紀錄
     const viewingHistory = localStorage.getItem('viewingHistory');
     if (viewingHistory) {
         items['viewingHistory'] = viewingHistory;
@@ -1326,31 +1326,31 @@ async function exportConfig() {
     }
 
     const times = Date.now().toString();
-    config['name'] = 'LibreTV-Settings';  // 配置文件名，用于校验
-    config['time'] = times;               // 配置文件生成时间
-    config['cfgVer'] = '1.0.0';           // 配置文件版本
-    config['data'] = items;               // 配置文件数据
-    config['hash'] = await sha256(JSON.stringify(config['data']));  // 计算数据的哈希值，用于校验
+    config['name'] = 'LibreTV-Settings';  // 設定檔案名稱，用於校驗
+    config['time'] = times;               // 設定檔案產生時間
+    config['cfgVer'] = '1.0.0';           // 設定檔案版本
+    config['data'] = items;               // 設定檔案資料
+    config['hash'] = await sha256(JSON.stringify(config['data']));  // 計算資料的雜湊值，用於校驗
 
-    // 将配置数据保存为 JSON 文件
+    // 將設定資料儲存為 JSON 檔案
     saveStringAsFile(JSON.stringify(config), 'LibreTV-Settings_' + times + '.json');
 }
 
-// 将字符串保存为文件
+// 將字串儲存為檔案
 function saveStringAsFile(content, fileName) {
-    // 创建Blob对象并指定类型
+    // 建立 Blob 物件並指定類型
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    // 生成临时URL
+    // 產生暫時 URL
     const url = window.URL.createObjectURL(blob);
-    // 创建<a>标签并触发下载
+    // 建立 <a> 標籤並觸發下載
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
-    // 清理临时对象
+    // 清理暫時物件
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 }
 
-// 移除Node.js的require语句，因为这是在浏览器环境中运行的
+// 移除 Node.js 的 require 語句，因為這是在瀏覽器環境中執行的
