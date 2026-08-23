@@ -1,4 +1,4 @@
-// 改进的API请求处理函数
+// 改善的 API 請求處理函式
 async function handleApiRequest(url) {
     const customApi = url.searchParams.get('customApi') || '';
     const customDetail = url.searchParams.get('customDetail') || '';
@@ -8,28 +8,28 @@ async function handleApiRequest(url) {
         if (url.pathname === '/api/search') {
             const searchQuery = url.searchParams.get('wd');
             if (!searchQuery) {
-                throw new Error('缺少搜索参数');
+                throw new Error('缺少搜尋參數');
             }
             
-            // 验证API和source的有效性
+            // 驗證 API 與 source 的有效性
             if (source === 'custom' && !customApi) {
-                throw new Error('使用自定义API时必须提供API地址');
+                throw new Error('使用自訂 API 時必須提供 API 位址');
             }
             
             if (!API_SITES[source] && source !== 'custom') {
-                throw new Error('无效的API来源');
+                throw new Error('無效的 API 來源');
             }
             
             const apiUrl = customApi
                 ? `${customApi}${API_CONFIG.search.path}${encodeURIComponent(searchQuery)}`
                 : `${API_SITES[source].api}${API_CONFIG.search.path}${encodeURIComponent(searchQuery)}`;
             
-            // 添加超时处理
+            // 新增逾時處理
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
             
             try {
-                // 添加鉴权参数到代理URL
+                // 新增鑑權參數到代理 URL
                 const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
                     await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl)) :
                     PROXY_URL + encodeURIComponent(apiUrl);
@@ -42,21 +42,21 @@ async function handleApiRequest(url) {
                 clearTimeout(timeoutId);
                 
                 if (!response.ok) {
-                    throw new Error(`API请求失败: ${response.status}`);
+                    throw new Error(`API 請求失敗: ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                // 检查JSON格式的有效性
+                // 檢查 JSON 格式的有效性
                 if (!data || !Array.isArray(data.list)) {
-                    throw new Error('API返回的数据格式无效');
+                    throw new Error('API 回傳的資料格式無效');
                 }
                 
-                // 添加源信息到每个结果
+                // 新增來源資訊到每個結果
                 data.list.forEach(item => {
-                    item.source_name = source === 'custom' ? '自定义源' : API_SITES[source].name;
+                    item.source_name = source === 'custom' ? '自訂來源' : API_SITES[source].name;
                     item.source_code = source;
-                    // 对于自定义源，添加API URL信息
+                    // 對於自訂來源，新增 API URL 資訊
                     if (source === 'custom') {
                         item.api_url = customApi;
                     }
@@ -72,36 +72,36 @@ async function handleApiRequest(url) {
             }
         }
 
-        // 详情处理
+        // 詳情處理
         if (url.pathname === '/api/detail') {
             const id = url.searchParams.get('id');
-            const sourceCode = url.searchParams.get('source') || 'heimuer'; // 获取源代码
+            const sourceCode = url.searchParams.get('source') || 'heimuer'; // 取得原始碼
             
             if (!id) {
-                throw new Error('缺少视频ID参数');
+                throw new Error('缺少影片 ID 參數');
             }
             
-            // 验证ID格式 - 只允许数字和有限的特殊字符
+            // 驗證 ID 格式 - 僅允許數字和有限的特殊字元
             if (!/^[\w-]+$/.test(id)) {
-                throw new Error('无效的视频ID格式');
+                throw new Error('無效的影片 ID 格式');
             }
 
-            // 验证API和source的有效性
+            // 驗證 API 與 source 的有效性
             if (sourceCode === 'custom' && !customApi) {
-                throw new Error('使用自定义API时必须提供API地址');
+                throw new Error('使用自訂 API 時必須提供 API 位址');
             }
             
             if (!API_SITES[sourceCode] && sourceCode !== 'custom') {
-                throw new Error('无效的API来源');
+                throw new Error('無效的 API 來源');
             }
 
-            // 对于有detail参数的源，都使用特殊处理方式
+            // 對於有 detail 參數的來源，皆使用特殊處理方式
             if (sourceCode !== 'custom' && API_SITES[sourceCode].detail) {
                 return await handleSpecialSourceDetail(id, sourceCode);
             }
             
-            // 如果是自定义API，并且传递了detail参数，尝试特殊处理
-            // 优先 customDetail
+            // 如果是自訂 API，並且傳遞了 detail 參數，嘗試特殊處理
+            // 優先 customDetail
             if (sourceCode === 'custom' && customDetail) {
                 return await handleCustomApiSpecialDetail(id, customDetail);
             }
@@ -113,12 +113,12 @@ async function handleApiRequest(url) {
                 ? `${customApi}${API_CONFIG.detail.path}${id}`
                 : `${API_SITES[sourceCode].api}${API_CONFIG.detail.path}${id}`;
             
-            // 添加超时处理
+            // 新增逾時處理
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
             
             try {
-                // 添加鉴权参数到代理URL
+                // 新增鑑權參數到代理 URL
                 const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
                     await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
                     PROXY_URL + encodeURIComponent(detailUrl);
@@ -131,42 +131,42 @@ async function handleApiRequest(url) {
                 clearTimeout(timeoutId);
                 
                 if (!response.ok) {
-                    throw new Error(`详情请求失败: ${response.status}`);
+                    throw new Error(`詳情請求失敗: ${response.status}`);
                 }
                 
-                // 解析JSON
+                // 解析 JSON
                 const data = await response.json();
                 
-                // 检查返回的数据是否有效
+                // 檢查回傳的資料是否有效
                 if (!data || !data.list || !Array.isArray(data.list) || data.list.length === 0) {
-                    throw new Error('获取到的详情内容无效');
+                    throw new Error('取得的詳情內容無效');
                 }
                 
-                // 获取第一个匹配的视频详情
+                // 取得第一個符合的影片詳情
                 const videoDetail = data.list[0];
                 
-                // 提取播放地址
+                // 擷取播放位址
                 let episodes = [];
                 
                 if (videoDetail.vod_play_url) {
-                    // 分割不同播放源
+                    // 分割不同播放來源
                     const playSources = videoDetail.vod_play_url.split('$$$');
                     
-                    // 提取第一个播放源的集数（通常为主要源）
+                    // 擷取第一個播放來源的集數（通常為主要來源）
                     if (playSources.length > 0) {
                         const mainSource = playSources[0];
                         const episodeList = mainSource.split('#');
                         
-                        // 从每个集数中提取URL
+                        // 從每個集數中擷取 URL
                         episodes = episodeList.map(ep => {
                             const parts = ep.split('$');
-                            // 返回URL部分(通常是第二部分，如果有的话)
+                            // 回傳 URL 部分（通常是第二部分，如果有的話）
                             return parts.length > 1 ? parts[1] : '';
                         }).filter(url => url && (url.startsWith('http://') || url.startsWith('https://')));
                     }
                 }
                 
-                // 如果没有找到播放地址，尝试使用正则表达式查找m3u8链接
+                // 如果沒有找到播放位址，嘗試使用規則運算式尋找 m3u8 連結
                 if (episodes.length === 0 && videoDetail.vod_content) {
                     const matches = videoDetail.vod_content.match(M3U8_PATTERN) || [];
                     episodes = matches.map(link => link.replace(/^\$/, ''));
@@ -186,8 +186,8 @@ async function handleApiRequest(url) {
                         director: videoDetail.vod_director,
                         actor: videoDetail.vod_actor,
                         remarks: videoDetail.vod_remarks,
-                        // 添加源信息
-                        source_name: sourceCode === 'custom' ? '自定义源' : API_SITES[sourceCode].name,
+                        // 新增來源資訊
+                        source_name: sourceCode === 'custom' ? '自訂來源' : API_SITES[sourceCode].name,
                         source_code: sourceCode
                     }
                 });
@@ -197,34 +197,34 @@ async function handleApiRequest(url) {
             }
         }
 
-        throw new Error('未知的API路径');
+        throw new Error('未知的 API 路徑');
     } catch (error) {
-        console.error('API处理错误:', error);
+        console.error('API 處理錯誤:', error);
         return JSON.stringify({
             code: 400,
-            msg: error.message || '请求处理失败',
+            msg: error.message || '請求處理失敗',
             list: [],
             episodes: [],
         });
     }
 }
 
-// 处理自定义API的特殊详情页
+// 處理自訂 API 的特殊詳情頁
 async function handleCustomApiSpecialDetail(id, customApi) {
     try {
-        // 构建详情页URL
+        // 建立詳情頁 URL
         const detailUrl = `${customApi}/index.php/vod/detail/id/${id}.html`;
         
-        // 添加超时处理
+        // 新增逾時處理
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        // 添加鉴权参数到代理URL
+        // 新增鑑權參數到代理 URL
         const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
             await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
             PROXY_URL + encodeURIComponent(detailUrl);
             
-        // 获取详情页HTML
+        // 取得詳情頁 HTML
         const response = await fetch(proxiedUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -235,24 +235,24 @@ async function handleCustomApiSpecialDetail(id, customApi) {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-            throw new Error(`自定义API详情页请求失败: ${response.status}`);
+            throw new Error(`自訂 API 詳情頁請求失敗: ${response.status}`);
         }
         
-        // 获取HTML内容
+        // 取得 HTML 內容
         const html = await response.text();
         
-        // 使用通用模式提取m3u8链接
+        // 使用通用模式擷取 m3u8 連結
         const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
         let matches = html.match(generalPattern) || [];
         
-        // 处理链接
+        // 處理連結
         matches = matches.map(link => {
             link = link.substring(1, link.length);
             const parenIndex = link.indexOf('(');
             return parenIndex > 0 ? link.substring(0, parenIndex) : link;
         });
         
-        // 提取基本信息
+        // 擷取基本資訊
         const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
         const titleText = titleMatch ? titleMatch[1].trim() : '';
         
@@ -266,32 +266,32 @@ async function handleCustomApiSpecialDetail(id, customApi) {
             videoInfo: {
                 title: titleText,
                 desc: descText,
-                source_name: '自定义源',
+                source_name: '自訂來源',
                 source_code: 'custom'
             }
         });
     } catch (error) {
-        console.error(`自定义API详情获取失败:`, error);
+        console.error(`自訂 API 詳情取得失敗:`, error);
         throw error;
     }
 }
 
-// 通用特殊源详情处理函数
+// 通用特殊來源詳情處理函式
 async function handleSpecialSourceDetail(id, sourceCode) {
     try {
-        // 构建详情页URL（使用配置中的detail URL而不是api URL）
+        // 建立詳情頁 URL（使用設定中的 detail URL 而不是 api URL）
         const detailUrl = `${API_SITES[sourceCode].detail}/index.php/vod/detail/id/${id}.html`;
         
-        // 添加超时处理
+        // 新增逾時處理
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        // 添加鉴权参数到代理URL
+        // 新增鑑權參數到代理 URL
         const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
             await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
             PROXY_URL + encodeURIComponent(detailUrl);
             
-        // 获取详情页HTML
+        // 取得詳情頁 HTML
         const response = await fetch(proxiedUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -302,36 +302,36 @@ async function handleSpecialSourceDetail(id, sourceCode) {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-            throw new Error(`详情页请求失败: ${response.status}`);
+            throw new Error(`詳情頁請求失敗: ${response.status}`);
         }
         
-        // 获取HTML内容
+        // 取得 HTML 內容
         const html = await response.text();
         
-        // 根据不同源类型使用不同的正则表达式
+        // 根據不同來源類型使用不同的規則運算式
         let matches = [];
         
         if (sourceCode === 'ffzy') {
-            // 非凡影视使用特定的正则表达式
+            // 非凡影視使用特定的規則運算式
             const ffzyPattern = /\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g;
             matches = html.match(ffzyPattern) || [];
         }
         
-        // 如果没有找到链接或者是其他源类型，尝试一个更通用的模式
+        // 如果沒有找到連結或者是其他來源類型，嘗試一個更通用的模式
         if (matches.length === 0) {
             const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
             matches = html.match(generalPattern) || [];
         }
-        // 去重处理，避免一个播放源多集显示
+        // 排除重複處理，避免一個播放來源多集顯示
         matches = [...new Set(matches)];
-        // 处理链接
+        // 處理連結
         matches = matches.map(link => {
             link = link.substring(1, link.length);
             const parenIndex = link.indexOf('(');
             return parenIndex > 0 ? link.substring(0, parenIndex) : link;
         });
         
-        // 提取可能存在的标题、简介等基本信息
+        // 擷取可能存在的標題、簡介等基本資訊
         const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
         const titleText = titleMatch ? titleMatch[1].trim() : '';
         
@@ -350,33 +350,33 @@ async function handleSpecialSourceDetail(id, sourceCode) {
             }
         });
     } catch (error) {
-        console.error(`${API_SITES[sourceCode].name}详情获取失败:`, error);
+        console.error(`${API_SITES[sourceCode].name}詳情取得失敗:`, error);
         throw error;
     }
 }
 
-// 处理聚合搜索
+// 處理聚合搜尋
 async function handleAggregatedSearch(searchQuery) {
-    // 获取可用的API源列表（排除aggregated和custom）
+    // 取得可用的 API 來源列表（排除 aggregated 和 custom）
     const availableSources = Object.keys(API_SITES).filter(key => 
         key !== 'aggregated' && key !== 'custom'
     );
     
     if (availableSources.length === 0) {
-        throw new Error('没有可用的API源');
+        throw new Error('沒有可用的 API 來源');
     }
     
-    // 创建所有API源的搜索请求
+    // 建立所有 API 來源的搜尋請求
     const searchPromises = availableSources.map(async (source) => {
         try {
             const apiUrl = `${API_SITES[source].api}${API_CONFIG.search.path}${encodeURIComponent(searchQuery)}`;
             
-            // 使用Promise.race添加超时处理
+            // 使用 Promise.race 新增逾時處理
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error(`${source}源搜索超时`)), 8000)
+                setTimeout(() => reject(new Error(`${source}來源搜尋逾時`)), 8000)
             );
             
-            // 添加鉴权参数到代理URL
+            // 新增鑑權參數到代理 URL
             const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
                 await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl)) :
                 PROXY_URL + encodeURIComponent(apiUrl);
@@ -388,16 +388,16 @@ async function handleAggregatedSearch(searchQuery) {
             const response = await Promise.race([fetchPromise, timeoutPromise]);
             
             if (!response.ok) {
-                throw new Error(`${source}源请求失败: ${response.status}`);
+                throw new Error(`${source}來源請求失敗: ${response.status}`);
             }
             
             const data = await response.json();
             
             if (!data || !Array.isArray(data.list)) {
-                throw new Error(`${source}源返回的数据格式无效`);
+                throw new Error(`${source}來源回傳的資料格式無效`);
             }
             
-            // 为搜索结果添加源信息
+            // 為搜尋結果新增來源資訊
             const results = data.list.map(item => ({
                 ...item,
                 source_name: API_SITES[source].name,
@@ -406,16 +406,16 @@ async function handleAggregatedSearch(searchQuery) {
             
             return results;
         } catch (error) {
-            console.warn(`${source}源搜索失败:`, error);
-            return []; // 返回空数组表示该源搜索失败
+            console.warn(`${source}來源搜尋失敗:`, error);
+            return []; // 回傳空陣列表示該來源搜尋失敗
         }
     });
     
     try {
-        // 并行执行所有搜索请求
+        // 並行執行所有搜尋請求
         const resultsArray = await Promise.all(searchPromises);
         
-        // 合并所有结果
+        // 合併所有結果
         let allResults = [];
         resultsArray.forEach(results => {
             if (Array.isArray(results) && results.length > 0) {
@@ -423,16 +423,16 @@ async function handleAggregatedSearch(searchQuery) {
             }
         });
         
-        // 如果没有搜索结果，返回空结果
+        // 如果沒有搜尋結果，回傳空結果
         if (allResults.length === 0) {
             return JSON.stringify({
                 code: 200,
                 list: [],
-                msg: '所有源均无搜索结果'
+                msg: '所有來源均無搜尋結果'
             });
         }
         
-        // 去重（根据vod_id和source_code组合）
+        // 排除重複（根據 vod_id 和 source_code 組合）
         const uniqueResults = [];
         const seen = new Set();
         
@@ -444,13 +444,13 @@ async function handleAggregatedSearch(searchQuery) {
             }
         });
         
-        // 按照视频名称和来源排序
+        // 按照影片名稱和來源排序
         uniqueResults.sort((a, b) => {
-            // 首先按照视频名称排序
+            // 首先按照影片名稱排序
             const nameCompare = (a.vod_name || '').localeCompare(b.vod_name || '');
             if (nameCompare !== 0) return nameCompare;
             
-            // 如果名称相同，则按照来源排序
+            // 如果名稱相同，則按照來源排序
             return (a.source_name || '').localeCompare(b.source_name || '');
         });
         
@@ -459,38 +459,38 @@ async function handleAggregatedSearch(searchQuery) {
             list: uniqueResults,
         });
     } catch (error) {
-        console.error('聚合搜索处理错误:', error);
+        console.error('聚合搜尋處理錯誤:', error);
         return JSON.stringify({
             code: 400,
-            msg: '聚合搜索处理失败: ' + error.message,
+            msg: '聚合搜尋處理失敗: ' + error.message,
             list: []
         });
     }
 }
 
-// 处理多个自定义API源的聚合搜索
+// 處理多個自訂 API 來源的聚合搜尋
 async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
-    // 解析自定义API列表
+    // 解析自訂 API 列表
     const apiUrls = customApiUrls.split(CUSTOM_API_CONFIG.separator)
         .map(url => url.trim())
         .filter(url => url.length > 0 && /^https?:\/\//.test(url))
         .slice(0, CUSTOM_API_CONFIG.maxSources);
     
     if (apiUrls.length === 0) {
-        throw new Error('没有提供有效的自定义API地址');
+        throw new Error('沒有提供有效的自訂 API 位址');
     }
     
-    // 为每个API创建搜索请求
+    // 為每個 API 建立搜尋請求
     const searchPromises = apiUrls.map(async (apiUrl, index) => {
         try {
             const fullUrl = `${apiUrl}${API_CONFIG.search.path}${encodeURIComponent(searchQuery)}`;
             
-            // 使用Promise.race添加超时处理
+            // 使用 Promise.race 新增逾時處理
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error(`自定义API ${index+1} 搜索超时`)), 8000)
+                setTimeout(() => reject(new Error(`自訂 API ${index+1} 搜尋逾時`)), 8000)
             );
             
-            // 添加鉴权参数到代理URL
+            // 新增鑑權參數到代理 URL
             const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
                 await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(fullUrl)) :
                 PROXY_URL + encodeURIComponent(fullUrl);
@@ -502,35 +502,35 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             const response = await Promise.race([fetchPromise, timeoutPromise]);
             
             if (!response.ok) {
-                throw new Error(`自定义API ${index+1} 请求失败: ${response.status}`);
+                throw new Error(`自訂 API ${index+1} 請求失敗: ${response.status}`);
             }
             
             const data = await response.json();
             
             if (!data || !Array.isArray(data.list)) {
-                throw new Error(`自定义API ${index+1} 返回的数据格式无效`);
+                throw new Error(`自訂 API ${index+1} 回傳的資料格式無效`);
             }
             
-            // 为搜索结果添加源信息
+            // 為搜尋結果新增來源資訊
             const results = data.list.map(item => ({
                 ...item,
                 source_name: `${CUSTOM_API_CONFIG.namePrefix}${index+1}`,
                 source_code: 'custom',
-                api_url: apiUrl // 保存API URL以便详情获取
+                api_url: apiUrl // 儲存 API URL 以便取得詳情
             }));
             
             return results;
         } catch (error) {
-            console.warn(`自定义API ${index+1} 搜索失败:`, error);
-            return []; // 返回空数组表示该源搜索失败
+            console.warn(`自訂 API ${index+1} 搜尋失敗:`, error);
+            return []; // 回傳空陣列表示該來源搜尋失敗
         }
     });
     
     try {
-        // 并行执行所有搜索请求
+        // 並行執行所有搜尋請求
         const resultsArray = await Promise.all(searchPromises);
         
-        // 合并所有结果
+        // 合併所有結果
         let allResults = [];
         resultsArray.forEach(results => {
             if (Array.isArray(results) && results.length > 0) {
@@ -538,16 +538,16 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             }
         });
         
-        // 如果没有搜索结果，返回空结果
+        // 如果沒有搜尋結果，回傳空結果
         if (allResults.length === 0) {
             return JSON.stringify({
                 code: 200,
                 list: [],
-                msg: '所有自定义API源均无搜索结果'
+                msg: '所有自訂 API 來源均無搜尋結果'
             });
         }
         
-        // 去重（根据vod_id和api_url组合）
+        // 排除重複（根據 vod_id 和 api_url 組合）
         const uniqueResults = [];
         const seen = new Set();
         
@@ -564,16 +564,16 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             list: uniqueResults,
         });
     } catch (error) {
-        console.error('自定义API聚合搜索处理错误:', error);
+        console.error('自訂 API 聚合搜尋處理錯誤:', error);
         return JSON.stringify({
             code: 400,
-            msg: '自定义API聚合搜索处理失败: ' + error.message,
+            msg: '自訂 API 聚合搜尋處理失敗: ' + error.message,
             list: []
         });
     }
 }
 
-// 拦截API请求
+// 攔截 API 請求
 (function() {
     const originalFetch = window.fetch;
     
@@ -597,7 +597,7 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             } catch (error) {
                 return new Response(JSON.stringify({
                     code: 500,
-                    msg: '服务器内部错误',
+                    msg: '伺服器內部錯誤',
                 }), {
                     status: 500,
                     headers: {
@@ -607,30 +607,30 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             }
         }
         
-        // 非API请求使用原始fetch
+        // 非 API 請求使用原始 fetch
         return originalFetch.apply(this, arguments);
     };
 })();
 
 async function testSiteAvailability(apiUrl) {
     try {
-        // 使用更简单的测试查询
+        // 使用更簡單的測試查詢
         const response = await fetch('/api/search?wd=test&customApi=' + encodeURIComponent(apiUrl), {
-            // 添加超时
+            // 新增逾時
             signal: AbortSignal.timeout(5000)
         });
         
-        // 检查响应状态
+        // 檢查回應狀態
         if (!response.ok) {
             return false;
         }
         
         const data = await response.json();
         
-        // 检查API响应的有效性
+        // 檢查 API 回應的有效性
         return data && data.code !== 400 && Array.isArray(data.list);
     } catch (error) {
-        console.error('站点可用性测试失败:', error);
+        console.error('網站可用性測試失敗:', error);
         return false;
     }
 }
