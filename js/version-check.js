@@ -59,7 +59,7 @@ async function checkForUpdates() {
                 console.log('直接請求獲取版本成功');
             } catch (directError) {
                 console.error('所有版本檢查請求均失敗:', directError);
-                throw new Error('無法獲取最新版本資訊');
+                latestVersion = null; // 查不到最新版本時，仍然顯示目前版本
             }
         }
         
@@ -68,15 +68,16 @@ async function checkForUpdates() {
         
         // 清理版本字串（移除可能的空格或換行符）
         const cleanCurrentVersion = currentVersion.trim();
-        const cleanLatestVersion = latestVersion.trim();
+        const cleanLatestVersion = latestVersion ? latestVersion.trim() : null;
         
         // 返回版本資訊
         return {
             current: cleanCurrentVersion,
             latest: cleanLatestVersion,
-            hasUpdate: parseInt(cleanLatestVersion) > parseInt(cleanCurrentVersion),
+            hasUpdate: cleanLatestVersion ? parseInt(cleanLatestVersion) > parseInt(cleanCurrentVersion) : false,
+            latestUnknown: !cleanLatestVersion,
             currentFormatted: formatVersion(cleanCurrentVersion),
-            latestFormatted: formatVersion(cleanLatestVersion)
+            latestFormatted: cleanLatestVersion ? formatVersion(cleanLatestVersion) : '未知'
         };
     } catch (error) {
         console.error('版本檢測出錯:', error);
@@ -152,6 +153,9 @@ function addVersionInfoToFooter() {
                     });
                 }
             }, 100);
+        } else if (result.latestUnknown) {
+            // 連不上 GitHub 時，只顯示目前版本
+            versionElement.innerHTML = `版本: ${result.currentFormatted}`;
         } else {
             // 如果沒有更新，顯示當前版本為最新版本
             versionElement.innerHTML = `版本: ${result.currentFormatted} <span class="text-green-500">(最新版本)</span>`;

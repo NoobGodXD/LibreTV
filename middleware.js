@@ -37,6 +37,13 @@ export default async function middleware(request) {
     `window.__ENV__.PASSWORD = "${passwordHash}"; // SHA-256 hash`
   );
 
+  // 片名對照用的 TMDB 金鑰（可選；只允許字母、數字、-、_、.，避免被注入）
+  const tmdbKey = String(process.env.TMDB_API_KEY || '').replace(/[^A-Za-z0-9._-]/g, '');
+  modifiedHtml = modifiedHtml.replace(
+    'window.__ENV__.TMDB_API_KEY = "{{TMDB_API_KEY}}";',
+    `window.__ENV__.TMDB_API_KEY = "${tmdbKey}";`
+  );
+
   // 修復Response構造
   return new Response(modifiedHtml, {
     status: response.status,

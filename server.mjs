@@ -60,6 +60,9 @@ async function renderPage(filePath, password) {
   } else {
     content = content.replace('{{PASSWORD}}', '');
   }
+  // 片名對照用的 TMDB 金鑰（可選；只允許字母、數字、-、_、.，避免被注入）
+  const tmdbKey = String(process.env.TMDB_API_KEY || '').replace(/[^A-Za-z0-9._-]/g, '');
+  content = content.replace('{{TMDB_API_KEY}}', tmdbKey);
   return content;
 }
 

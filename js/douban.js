@@ -537,15 +537,12 @@ function renderDoubanCards(data, container) {
             // 1. 直接使用豆瓣圖片URL (新增no-referrer屬性)
             const originalCoverUrl = item.cover;
             
-            // 2. 也準備代理URL作為備選
-            const proxiedCoverUrl = PROXY_URL + encodeURIComponent(originalCoverUrl);
-            
             // 為不同裝置最佳化卡片佈局
             card.innerHTML = `
                 <div class="relative w-full aspect-[2/3] overflow-hidden cursor-pointer" onclick="fillAndSearchWithDouban('${safeTitle}')">
                     <img src="${originalCoverUrl}" alt="${safeTitle}" 
                         class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                        onerror="this.onerror=null; this.src='${proxiedCoverUrl}'; this.classList.add('object-contain');"
+                        onerror="doubanCoverFallback(this)" data-cover="${encodeURIComponent(originalCoverUrl || '')}"
                         loading="lazy" referrerpolicy="no-referrer">
                     <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
                     <div class="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-sm">
@@ -796,4 +793,22 @@ function resetTagsToDefault() {
     renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
     
     showToast('已恢復預設標籤', 'success');
+}
+
+// 豆瓣封面直連失敗時（防盜連或網路因素），改走代理。
+// 代理需要鑑權參數，所以要先經過 ProxyAuth 簽署，否則會被代理拒絕（401）而顯示不出圖片。
+async function doubanCoverFallback(img) {
+    img.onerror = null;
+    try {
+        const original = decodeURIComponent(img.dataset.cover || '');
+        if (!original) return;
+        let url = PROXY_URL + encodeURIComponent(original);
+        if (window.ProxyAuth && window.ProxyAuth.addAuthToProxyUrl) {
+            url = await window.ProxyAuth.addAuthToProxyUrl(url);
+        }
+        img.classList.add('object-contain');
+        img.src = url;
+    } catch (e) {
+        console.warn('封面代理載入失敗:', e);
+    }
 }
