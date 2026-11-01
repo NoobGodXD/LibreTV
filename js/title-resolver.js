@@ -186,7 +186,28 @@
 
     /* ---------------- 查詢流程 ---------------- */
 
+    // 手動對照表（js/title-aliases.js）：片名完全相同才命中
+    function lookupAlias(q) {
+        const list = global.TitleAliases;
+        if (!Array.isArray(list)) return [];
+        const key = ZH.normalizeTitle(q);
+        if (!key) return [];
+        const out = [];
+        for (const entry of list) {
+            if ((entry.tw || []).some((t) => ZH.normalizeTitle(t) === key)) out.push(...(entry.cn || []));
+        }
+        return out;
+    }
+
     async function lookup(q) {
+        const aliasCn = lookupAlias(q);
+        const result = await lookupOnline(q);
+        // 手動對照排最前面，最可信
+        result.cn = [...aliasCn, ...result.cn.filter((t) => !aliasCn.includes(t))];
+        return result;
+    }
+
+    async function lookupOnline(q) {
         const credential = tmdbCredential();
         let result = null;
         if (credential) {

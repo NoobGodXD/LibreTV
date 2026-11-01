@@ -229,6 +229,7 @@
     <!-- 簡繁轉換與片名對照：換源時用片名搜尋其他來源也能跨繁簡英文 -->
     <script src="libs/opencc-lite.min.js"></script>
     <script src="js/zh-convert.js"></script>
+    <script src="js/title-aliases.js"></script>
     <script src="js/title-resolver.js"></script>
     <script src="js/config.js"></script>
     <script src="js/proxy-auth.js"></script>
@@ -246,6 +247,7 @@
         // 注入伺服器端環境變數 (將由伺服器端替換)
         // PASSWORD 變數將在這裡被伺服器端注入
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
+        window.__ENV__.TMDB_API_KEY = "{{TMDB_API_KEY}}";
 
         // 修正首頁跳轉
         document.addEventListener('DOMContentLoaded', function() {

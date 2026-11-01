@@ -6,6 +6,7 @@ services:
       - "8899:8080" # 將內部 8080 埠對映到主機的 8899 埠
     environment:
       - PASSWORD=${PASSWORD:-your_password} # 可將 your_password 修改為你想要的密碼，預設為 your_password
+      - TMDB_API_KEY=${TMDB_API_KEY:-} # 可選：TMDB API 金鑰，用於台灣／大陸片名對照
 #    volumes:
 #      - libretv_data:/app # 不要修改
     restart: unless-stopped

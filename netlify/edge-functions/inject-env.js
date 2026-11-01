@@ -35,9 +35,13 @@ export default async (request, context) => {
     passwordHash = await sha256(password);
   }
   
+  const tmdbKey = String(Netlify.env.get('TMDB_API_KEY') || '').replace(/[^A-Za-z0-9._-]/g, '');
   const modifiedHtml = originalHtml.replace(
     'window.__ENV__.PASSWORD = "{{PASSWORD}}";',
     `window.__ENV__.PASSWORD = "${passwordHash}"; // SHA-256 hash`
+  ).replace(
+    'window.__ENV__.TMDB_API_KEY = "{{TMDB_API_KEY}}";',
+    `window.__ENV__.TMDB_API_KEY = "${tmdbKey}";`
   );
   
   // Create a new response with the modified HTML

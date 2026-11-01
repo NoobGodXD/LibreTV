@@ -417,6 +417,7 @@
     <!-- 簡繁轉換與片名對照：讓繁體、簡體、英文片名都能搜尋到影片 -->
     <script src="libs/opencc-lite.min.js"></script>
     <script src="js/zh-convert.js"></script>
+    <script src="js/title-aliases.js"></script>
     <script src="js/title-resolver.js"></script>
 
     <script src="js/config.js"></script>
@@ -440,6 +441,7 @@
         // 注入伺服器端環境變數 (將由伺服器端替換)
         // PASSWORD 變數將在這裡被伺服器端注入
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
+        window.__ENV__.TMDB_API_KEY = "{{TMDB_API_KEY}}";
     </script>
 
     <!-- 版本檢測腳本 -->
